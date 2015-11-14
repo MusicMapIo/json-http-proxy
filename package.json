@@ -1,8 +1,11 @@
 {
   "name": "json-http-proxy",
-  "version": "1.0.0-ALPHA-1",
+  "version": "1.0.0-ALPHA-2",
   "description": "A json configuration based http proxy server",
   "main": "index.js",
+  "bin": {
+	  "json-http-proxy": "./bin/json-http-proxy"
+  },
   "scripts": {
     "babel": "babel src --out-dir lib",
     "prepublish": "npm run babel",
