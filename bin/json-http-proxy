@@ -1,0 +1,26 @@
+#!/usr/bin/env node
+
+var app = require('commander');
+var path = require('path');
+var ProxyServer = require('../');
+
+app.option('-c, --config [path]', 'The json file path', './proxy-config.json');
+app.option('-p, --port [port]', 'Port to run the proxy server on', 80);
+app.option('-h, --host [host]', 'Hostname to listen on', 'localhost');
+app.option('-d, --cwd [dir]', 'Set the current working directory', process.cwd());
+app.parse(process.argv);
+
+// Load configuration
+var config = require(path.resolve(app.cwd, app.config));
+
+// Create server
+var server = new ProxyServer(config);
+
+// Start listening
+server.listen(app.port, app.host, function(err) {
+	if (err) {
+		console.error(err);
+		process.exit();
+	}
+	console.log('Listending on ' + server.hostname + ':' + server.port);
+});
