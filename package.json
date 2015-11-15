@@ -1,6 +1,6 @@
 {
   "name": "json-http-proxy",
-  "version": "1.0.0-ALPHA-2",
+  "version": "1.0.0-ALPHA-3",
   "description": "A json configuration based http proxy server",
   "main": "index.js",
   "bin": {
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/wesleytodd/json-http-proxy.git"
+    "url": "git+ssh://git@github.com/MusicMapIo/json-http-proxy.git"
   },
   "keywords": [
     "http",
@@ -24,9 +24,9 @@
   "author": "MusicMap",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/wesleytodd/json-http-proxy/issues"
+    "url": "https://github.com/MusicMapIo/json-http-proxy/issues"
   },
-  "homepage": "https://github.com/wesleytodd/json-http-proxy#readme",
+  "homepage": "https://github.com/MusicMapIo/json-http-proxy#readme",
   "dependencies": {
     "commander": "^2.9.0",
     "http-proxy": "^1.12.0",
