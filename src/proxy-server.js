@@ -83,14 +83,16 @@ export class ProxyServer {
 			this.routes.push(route);
 
 			// Register route handler
-			this.router[route.method](route.path, (req, res, next) => {
-				// Check for matching parameters that are not checked for
-				// in the path router, like hostname, next it doesnt match
-				if (!route.matches(req)) {
-					return next();
-				}
+			route.methods.forEach(method => {
+				this.router[method](route.path, (req, res, next) => {
+					// Check for matching parameters that are not checked for
+					// in the path router, like hostname, next it doesnt match
+					if (!route.matches(req)) {
+						return next();
+					}
 
-				route.handle(req, res, next);
+					route.handle(req, res, next);
+				});
 			});
 		});
 	}

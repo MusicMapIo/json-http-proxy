@@ -3,8 +3,15 @@ export class Route {
 	constructor(opts = {}) {
 		this.path = opts.path || '/';
 		this.hostname = opts.hostname || null;
-		this.method = (opts.method || 'get').toLowerCase();
 		this.upstream = opts.upstream;
+
+		if (opts.method) {
+			this.methods = [opts.method.toLowerCase()];
+		} else {
+			this.methods = (opts.methods || ['get', 'post', 'put', 'delete', 'patch']).map(function(m) {
+				return m.toLowerCase();
+			});
+		}
 	}
 
 	matches(req) {
