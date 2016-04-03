@@ -1,5 +1,15 @@
 # Configurable Proxy Server
 
+[![NPM Version][npm-image]][npm-url]
+[![NPM Downloads][downloads-image]][downloads-url]
+[![Build Status](https://travis-ci.org/MusicMap/json-http-proxy.svg?branch=master)](https://travis-ci.org/MusicMap/json-http-proxy)
+[![js-happiness-style](https://img.shields.io/badge/code%20style-happiness-brightgreen.svg)](https://github.com/JedWatson/happiness)
+
+[npm-image]: https://img.shields.io/npm/v/json-http-proxy.svg
+[npm-url]: https://npmjs.org/package/json-http-proxy
+[downloads-image]: https://img.shields.io/npm/dm/json-http-proxy.svg
+[downloads-url]: https://npmjs.org/package/json-http-proxy
+
 A powerful and extensible proxy server which uses a basic JSON schema to configure all of the functionality.  At its core, this is a wrapper around [`node-http-proxy`](https://github.com/nodejitsu/node-http-proxy), which provides the underlying http proxy logic.
 
 The original goal of this project was to run in development when working with microservices.  So you can run all the services localy and use this proxy on port 80 to smartly point different routes to your services.  Since then I have expanded the functionality to be a simple to use "smart" proxy, which you can use to to a plethora of things, including:
