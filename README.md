@@ -17,8 +17,8 @@ The original goal of this project was to run in development when working with mi
 - CORS headers
 - Modifying request and response body data
 - User-agent detection (Ex. serving mobile website views)
-- Cookie modifications
-- Cacheing proxy
+- Cookie modifications **Coming Soon**
+- Cacheing proxy **Coming Soon**
 
 All the functionality for doing this kind of processing is done through a simple plugin system.  Plugins are just a function which are passed the instance of `ProxyServer`.  They can use this instance to hook into events used to modify properties the requests, responses and other functionality.  Even core functionality is implemented as plugins, there are a few built in plugins for some common needs:
 
