@@ -10,7 +10,7 @@ The original goal of this project was to run in development when working with mi
 - Cookie modifications
 - Cacheing proxy
 
-All the functionality for doing this kind of processing is done through a simple plugin system.  Plugins are just a function which are passed the instance of `ProxyServer`.  They can used this instance to hook into events used to modify the requests and responses.  Even core functionality is implemented as plugins, so they can eaisly be disabled or overridden. There are a few built in plugins for some common needs:
+All the functionality for doing this kind of processing is done through a simple plugin system.  Plugins are just a function which are passed the instance of `ProxyServer`.  They can use this instance to hook into events used to modify properties the requests, responses and other functionality.  Even core functionality is implemented as plugins, there are a few built in plugins for some common needs:
 
 - Router: Processes host, path and http method matching
 - Route upstream handler: Allows registering named upstreams and specifying them in the routes `upstream` field
