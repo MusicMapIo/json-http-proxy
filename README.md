@@ -1,15 +1,31 @@
 # Configurable Proxy Server
 
-**NOTE: this is ALPHA software, use with caution until otherwise stated**
+A powerful and extensible proxy server which uses a basic JSON schema to configure all of the functionality.  At its core, this is a wrapper around [`node-http-proxy`](https://github.com/nodejitsu/node-http-proxy), which provides the underlying http proxy logic.
 
-This proxy server uses a JSON configuration file to define upstream services to proxy to.  The main goal of this project is to run in development when working with microservices.  So you can run all the services localy and use this proxy on port 80 to smartly point different routes to your services.
+The original goal of this project was to run in development when working with microservices.  So you can run all the services localy and use this proxy on port 80 to smartly point different routes to your services.  Since then I have expanded the functionality to be a simple to use "smart" proxy, which you can use to to a plethora of things, including:
 
-The reason you would use this instead of nginx or just hard coding host/ports is that this provides smart handling of things like CORS headers and cookie modifications.  We use this module to develop locally while pointing certian request to production servers so we can load real live data.
+- CORS headers
+- Modifying request and response body data
+- User-agent detection (Ex. serving mobile website views)
+- Cookie modifications
+- Cacheing proxy
+
+All the functionality for doing this kind of processing is done through a simple plugin system.  Plugins are just a function which are passed the instance of `ProxyServer`.  They can used this instance to hook into events used to modify the requests and responses.  Even core functionality is implemented as plugins, so they can eaisly be disabled or overridden. There are a few built in plugins for some common needs:
+
+- Router: Processes host, path and http method matching
+- Route upstream handler: Allows registering named upstreams and specifying them in the routes `upstream` field
+- CORS headers: Properly sets the `Access-Control-Allow-Methods` and `Access-Control-Allow-Origin` headers based on the incoming request
+- Cookie modifier: Specify rules for modifying cookie names and values
+
+## Installation
+
+```
+$ npm install json-http-proxy
+```
 
 ## Usage
 
 ```
-$ npm install json-http-proxy
 $ json-http-proxy
 ```
 

@@ -1,5 +1,7 @@
 var url = require('url');
 
+const _proxy = Symbol('proxy');
+
 export class Upstream {
 	constructor (name, opts = {}) {
 		if (!opts.proxy) {
@@ -11,12 +13,17 @@ export class Upstream {
 		this.hostname = opts.hostname || 'localhost';
 		this.port = typeof opts.port !== 'undefined' ? opts.port : 80;
 		this.path = opts.path || '/';
-		this.proxy = opts.proxy;
+		this[_proxy] = opts.proxy;
 	}
 
 	handle (req, res) {
-		this.proxy.web(req, res, {
-			target: url.format(this)
+		this[_proxy].web(req, res, {
+			target: url.format({
+				protocol: this.protocol,
+				hostname: this.hostname,
+				port: this.port,
+				path: this.path
+			})
 		});
 	}
 }

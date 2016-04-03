@@ -75,7 +75,7 @@ describe('json-http-proxy', function () {
 	});
 
 	it('should proxy a route to an upstream', function (done) {
-		startServer('/test', function (port, close) {
+		startServer('test', function (port, close) {
 			var ps = new ProxyServer({
 				routes: [{
 					path: '/test',
@@ -91,7 +91,7 @@ describe('json-http-proxy', function () {
 				http.get('http://localhost:' + ps.port + '/test', function (res) {
 					assert.equal(res.statusCode, 200);
 					res.on('data', function (d) {
-						assert.equal(d, '/test');
+						assert.equal(d, 'test');
 						close();
 						done();
 					});

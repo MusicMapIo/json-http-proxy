@@ -1,20 +1,19 @@
 // External deps use normal require
 var http = require('http');
 var httpProxy = require('http-proxy');
-var Router = require('router');
 var EventEmitter = require('events');
-var url = require('url');
 
 // Internal deps use ES6 module syntax
 import {Upstream} from './upstream';
 import {Route} from './route';
+import {routeUpstream} from './plugins/route-upstream';
+import {router} from './plugins/router';
 
 // Private stuff
 const _proxy = Symbol('proxy');
 const _upstreams = Symbol('upstreams');
 const _routes = Symbol('routes');
 const _server = Symbol('server');
-const _router = Symbol('router');
 
 export class ProxyServer extends EventEmitter {
 	constructor (opts = {}, onListen) {
@@ -24,24 +23,34 @@ export class ProxyServer extends EventEmitter {
 		this.hostname = opts.hostname || null;
 		this.port = opts.port || null;
 
-		// Create router
-		this[_router] = new Router(opts.routerOptions);
-
 		// Create http server
-		this[_server] = http.createServer((req, res, next) => {
-			this[_router](req, res, () => {
-				// do after stuff
-				this.emit('error', new Error('Unhandled route'));
-			});
+		this[_server] = http.createServer((req, res) => {
+			this.emit('request', req, res);
+		});
+		this[_server].on('error', (err) => {
+			this.emit('error', err);
 		});
 
 		// Create the proxy server
 		this[_proxy] = httpProxy.createProxyServer({
-			changeOrigin: typeof opts.changeOrigin === 'undefined' ? true : opts.changeOrigin
+			changeOrigin: typeof opts.changeOrigin === 'undefined' ? true : opts.changeOrigin,
+			xfwd: typeof opts.xfwd === 'undefined' ? true : opts.xfwd,
+			headers: opts.headers
 		});
 		this[_proxy].on('error', (err) => {
 			this.emit('error', err);
 		});
+		this[_proxy].on('proxyReq', (proxyReq, req, res, options) => {
+			this.emit('proxyReq', proxyReq, req, res, options);
+		});
+		this[_proxy].on('proxyRes', (proxyRes, req, res) => {
+			this.emit('proxyRes', proxyRes, req, res);
+		});
+
+		// Setup plugins
+		this.initPlugin(routeUpstream, opts);
+		opts.plugins && this.initPlugin(opts.plugins, opts);
+		this.initPlugin(router, opts);
 
 		// Register upstreams
 		this[_upstreams] = {};
@@ -59,6 +68,7 @@ export class ProxyServer extends EventEmitter {
 
 	/**
 	 * Start listening on a port and hostname
+	 *
 	 */
 	listen (port, hostname, done = function () {}) {
 		if (typeof port === 'function') {
@@ -78,12 +88,26 @@ export class ProxyServer extends EventEmitter {
 	}
 
 	/**
+	 * Initalize plugins
+	 *
+	 */
+	initPlugin (plugin, opts) {
+		// Init multiple if an array
+		if (Array.isArray(plugin)) {
+			return plugin.forEach((p) => {
+				this.initPlugin(p, opts);
+			});
+		}
+		plugin(this, opts);
+	}
+
+	/**
 	 * Registers the upstream servers
 	 *
 	 */
 	registerUpstream (name, upstream) {
 		if (typeof name === 'object') {
-			return Object.keys(name).forEach((k) => {
+			return Object.keys(name).map((k) => {
 				this.registerUpstream(k, name[k]);
 			});
 		}
@@ -102,6 +126,10 @@ export class ProxyServer extends EventEmitter {
 		return this[_upstreams][name];
 	}
 
+	/**
+	 * Get an upstream that has been registered with a given name
+	 *
+	 */
 	getUpstream (name) {
 		return this[_upstreams][name];
 	}
@@ -113,40 +141,23 @@ export class ProxyServer extends EventEmitter {
 	registerRoute (r) {
 		// Register multiple as an array
 		if (Array.isArray(r)) {
-			return r.forEach(this.registerRoute.bind(this));
-		}
-
-		// If an upstream is specified, replace it with an Upstream instance
-		if (typeof r.upstream === 'string' && this.getUpstream(r.upstream)) {
-			r.upstream = this.getUpstream(r.upstream);
-		} else if (typeof r.upstream === 'object') {
-			var name = url.format({
-				hostname: r.hostname || 'localhost',
-				port: typeof r.port !== 'undefined' ? r.port : 80,
-				path: r.path || '/'
-			});
-
-			r.upstream = this.registerUpstream(name, r.upstream);
+			return r.map(this.registerRoute.bind(this));
 		}
 
 		// Create route object
 		var route = new Route(r);
 		this[_routes].push(route);
 
-		// Register route handler
-		route.methods.forEach((method) => {
-			this[_router][method](route.path, (req, res, next) => {
-				// Check for matching parameters that are not checked for
-				// in the path router, like hostname, next it doesnt match
-				if (!route.matches(req)) {
-					return next();
-				}
+		// Plugin hook
+		this.emit('registerRoute', route);
 
-				route.handle(req, res, next);
-			});
-		});
+		return route;
 	}
 
+	/**
+	 * Close the server
+	 *
+	 */
 	close (done = function () {}) {
 		this[_server].close(() => {
 			this.proxy.close(() => {
