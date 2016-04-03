@@ -8,8 +8,7 @@
   },
   "scripts": {
     "babel": "babel src --out-dir lib",
-    "prepublish": "npm run babel",
-    "example": "sudo ./bin/json-http-proxy -d ./example",
+    "prepublish": "npm run test",
     "test": "happiness && npm run babel && mocha"
   },
   "repository": {
@@ -17,9 +16,7 @@
     "url": "git+ssh://git@github.com/MusicMapIo/json-http-proxy.git"
   },
   "keywords": [
-    "http",
-    "proxy",
-    "json"
+    "http proxy"
   ],
   "author": "MusicMap",
   "license": "ISC",
@@ -40,10 +37,5 @@
     "happiness": "^6.0.7",
     "mocha": "^2.4.5",
     "run-parallel": "^1.1.6"
-  },
-  "babel": {
-    "presets": [
-      "es2015"
-    ]
   }
 }
