@@ -1,6 +1,7 @@
-export class Route {
+var methods = require('methods');
 
-	constructor(opts = {}) {
+export class Route {
+	constructor (opts = {}) {
 		this.path = opts.path || '/';
 		this.hostname = opts.hostname || null;
 		this.upstream = opts.upstream;
@@ -8,13 +9,13 @@ export class Route {
 		if (opts.method) {
 			this.methods = [opts.method.toLowerCase()];
 		} else {
-			this.methods = (opts.methods || ['get', 'post', 'put', 'delete', 'patch']).map(function(m) {
+			this.methods = (opts.methods || methods).map(function (m) {
 				return m.toLowerCase();
 			});
 		}
 	}
 
-	matches(req) {
+	matches (req) {
 		// Check for hostname match
 		if (req.headers && this.hostname && req.headers.hostname !== this.hostname) {
 			return false;
@@ -25,7 +26,7 @@ export class Route {
 		return true;
 	}
 
-	handle(req, res, next) {
+	handle (req, res, next) {
 		this.upstream && this.upstream.handle(req, res, next);
 	}
 }
