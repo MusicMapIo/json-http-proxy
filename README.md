@@ -14,7 +14,7 @@ All the functionality for doing this kind of processing is done through a simple
 
 - Router: Processes host, path and http method matching
 - Route upstream handler: Allows registering named upstreams and specifying them in the routes `upstream` field
-- CORS headers: Properly sets the `Access-Control-Allow-Methods` and `Access-Control-Allow-Origin` headers based on the incoming request
+- CORS: Properly sets the `Access-Control-Allow-Methods` and `Access-Control-Allow-Origin` headers based on the incoming request, also responds to `OPTIONS` requests.
 - Cookie modifier: Specify rules for modifying cookie names and values
 
 ## Installation
@@ -73,3 +73,17 @@ This will start with defaults and load the configuration file called `proxy-conf
 ```
 
 This file is required in using node's `require` method, so anything that is valid to require can be used here (read "this can be javascript").  The above configuration file defined 4 upstream services which can be mapped to respond do different routes.  The routing uses the Express router, so see [their docs for how to specify paths](http://expressjs.com/guide/routing.html).
+
+## Options
+
+- `hostname`
+- `port`
+- `routerOptions`
+- `changeOrigin`
+- `xfwd`
+- `headers`
+- `corsHeaders`
+- `routeUpstreams`
+- `plugins`
+- `upstreams`
+- `routes`

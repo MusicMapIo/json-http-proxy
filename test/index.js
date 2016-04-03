@@ -3,19 +3,7 @@ var ProxyServer = require('../lib/proxy-server').ProxyServer;
 var assert = require('assert');
 var http = require('http');
 var parallel = require('run-parallel');
-
-// Create a http server for a route
-function startServer (name, done) {
-	var s = http.createServer(function (req, res) {
-		res.statusCode = 200;
-		res.end(name);
-	});
-	s.listen(null, function () {
-		done(s.address().port, function () {
-			s.close();
-		});
-	});
-}
+var startServer = require('./_start-server');
 
 describe('json-http-proxy', function () {
 	it('exposed interface should look correct', function () {
@@ -142,7 +130,6 @@ describe('json-http-proxy', function () {
 				}],
 				upstreams: {
 					test: {
-						path: '/test',
 						port: port
 					}
 				}

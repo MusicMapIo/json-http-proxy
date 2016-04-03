@@ -2,12 +2,12 @@
 var http = require('http');
 var httpProxy = require('http-proxy');
 var EventEmitter = require('events');
+var Router = require('router');
+var finalhandler = require('finalhandler');
 
 // Internal deps use ES6 module syntax
 import {Upstream} from './upstream';
 import {Route} from './route';
-import {routeUpstream} from './plugins/route-upstream';
-import {router} from './plugins/router';
 
 // Private stuff
 const _proxy = Symbol('proxy');
@@ -23,9 +23,16 @@ export class ProxyServer extends EventEmitter {
 		this.hostname = opts.hostname || null;
 		this.port = opts.port || null;
 
+		// Create a router instance to hook middleware into
+		this.router = new Router(opts.routerOptions);
+
 		// Create http server
 		this[_server] = http.createServer((req, res) => {
-			this.emit('request', req, res);
+			this.router(req, res, finalhandler(req, res, {
+				onerror: (err) => {
+					this.emit('error', err);
+				}
+			}));
 		});
 		this[_server].on('error', (err) => {
 			this.emit('error', err);
@@ -47,10 +54,22 @@ export class ProxyServer extends EventEmitter {
 			this.emit('proxyRes', proxyRes, req, res);
 		});
 
+		//
 		// Setup plugins
-		this.initPlugin(routeUpstream, opts);
+		//
+
+		// Use the router upstreams plugin
+		if (opts.routeUpstreams !== false) {
+			this.initPlugin('./plugins/route-upstream', opts);
+		}
+
+		// Use the cors plugin
+		if (opts.cors !== false) {
+			this.initPlugin('./plugins/cors', opts);
+		}
+
+		// Load custom plugins
 		opts.plugins && this.initPlugin(opts.plugins, opts);
-		this.initPlugin(router, opts);
 
 		// Register upstreams
 		this[_upstreams] = {};
@@ -98,7 +117,14 @@ export class ProxyServer extends EventEmitter {
 				this.initPlugin(p, opts);
 			});
 		}
-		plugin(this, opts);
+
+		try {
+			var p = require(plugin);
+		} catch (e) {
+			return this.emit('error', e);
+		}
+
+		p(this, opts);
 	}
 
 	/**
@@ -150,6 +176,22 @@ export class ProxyServer extends EventEmitter {
 
 		// Plugin hook
 		this.emit('registerRoute', route);
+
+		// Request handler method
+		var handleRequest = function handleRequest (req, res, next) {
+			// Check for hostname match
+			if (req.headers && route.hostname && req.headers.host !== route.hostname) {
+				return next();
+			}
+
+			// Matched a route, handle request
+			route.handle(req, res, next);
+		};
+
+		// Register route handlers for each supported method
+		route.methods.forEach((method) => {
+			this.router[method](route.path, handleRequest);
+		});
 
 		return route;
 	}

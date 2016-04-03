@@ -4,6 +4,7 @@ export class Route {
 	constructor (opts = {}) {
 		this.path = opts.path || '/';
 		this.hostname = opts.hostname || null;
+		this.port = opts.port || 80;
 		this.upstream = opts.upstream;
 
 		if (opts.method) {
@@ -13,17 +14,6 @@ export class Route {
 				return m.toLowerCase();
 			});
 		}
-	}
-
-	matches (req) {
-		// Check for hostname match
-		if (req.headers && this.hostname && req.headers.hostname !== this.hostname) {
-			return false;
-		}
-		// Do other checks??
-
-		// All matched, move along
-		return true;
 	}
 
 	handle (req, res, next) {
