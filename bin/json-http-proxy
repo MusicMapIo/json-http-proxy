@@ -3,12 +3,25 @@
 var app = require('commander');
 var path = require('path');
 var ProxyServer = require('../');
+var Loggerr = require('loggerr');
 
 app.option('-c, --config [path]', 'The json file path', './proxy-config.json');
-app.option('-p, --port [port]', 'Port to run the proxy server on', 80);
+app.option('-p, --port [port]', 'Port to run the proxy server on', 8080);
 app.option('-h, --host [host]', 'Hostname to listen on', 'localhost');
 app.option('-d, --cwd [dir]', 'Set the current working directory', process.cwd());
+app.option('-v, --verbose', 'Verbose logging');
+app.option('--debug', 'Debug logging');
 app.parse(process.argv);
+
+var level = Loggerr.NOTICE;
+if (app.verbose) {
+	level = Loggerr.INFO;
+} else if (app.debug) {
+	level = Loggerr.DEBUG;
+}
+var logger = new Loggerr({
+	level: level
+});
 
 // Load configuration
 var config = require(path.resolve(app.cwd, app.config));
@@ -16,11 +29,38 @@ var config = require(path.resolve(app.cwd, app.config));
 // Create server
 var server = new ProxyServer(config);
 
+// Bind to events for logging
+if (logger.level > Loggerr.NOTICE) {
+	server.on('pluginInatilized', function (plugin) {
+		loggerr.info('Plugin initalized: ' + plugin);
+	});
+	server.on('proxyReq', function (proxyReq, req, res, options) {
+		logger.info('Proxying request');
+		logger.debug('Proxy request', proxyReq);
+		logger.debug('Request', req);
+		logger.debug('Response', res);
+		logger.debug('Options', options);
+	});
+	server.on('proxyRes', function (proxyRes, req, res) {
+		logger.info('Proxy response recieved');
+		logger.debug('Proxy request', proxyReq);
+		logger.debug('Request', req);
+		logger.debug('Response', res);
+	});
+	server.on('registerUpstream', function (name, upstream) {
+		loggerr.info('Upstream registered', name);
+		loggerr.debug('Upstream', upstream);
+	});
+	server.on('registerRoute', function (plugin) {
+		loggerr.info('Route registered', route);
+	});
+}
+
 // Start listening
 server.listen(app.port, app.host, function(err) {
 	if (err) {
-		console.error(err);
+		logger.error(err);
 		process.exit();
 	}
-	console.log('Listending on ' + server.hostname + ':' + server.port);
+	logger.notice('Listending on ' + server.hostname + ':' + server.port);
 });

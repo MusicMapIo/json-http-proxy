@@ -28,6 +28,7 @@
     "commander": "^2.9.0",
     "finalhandler": "^0.4.1",
     "http-proxy": "^1.12.0",
+    "loggerr": "^1.7.0",
     "methods": "^1.1.2",
     "router": "^1.1.3"
   },
@@ -36,6 +37,7 @@
     "babel-preset-es2015": "^6.1.18",
     "happiness": "^6.0.7",
     "mocha": "^2.4.5",
-    "run-parallel": "^1.1.6"
+    "run-parallel": "^1.1.6",
+    "send": "^0.13.2"
   }
 }

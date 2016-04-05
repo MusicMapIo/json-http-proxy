@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<style>
+			body, html {
+				margin: 0;
+				height: 100%;
+			}
+			.container {
+				width: 80%;
+				height: 100%;
+				max-width: 800px;
+				margin: 0 auto;
+			}
+			h1 {
+				margin: 0 0 1em;
+			}
+			code {
+				display: block;
+				background: #efefef;
+				padding: 1em;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1>CORS Request Example</h1>
+			<pre><code id="console"></code></pre>
+		</div>
+
+		<script type="text/javascript">
+			var _console = document.getElementById('console');
+
+			makeReq('GET', 'http://bar.localhost:8081/data.json', function () {
+				log('GET request succeeded!\n');
+				makeReq('PUT', 'http://bar.localhost:8081', function () {
+					log('PUT request succeeded!\n');
+					log('All done!');
+				});
+			});
+
+			function log (data) {
+				var t = document.createTextNode(data + '\n');
+				_console.appendChild(t);
+			}
+
+			function makeReq (method, url, done) {
+				var xhr = new XMLHttpRequest();
+				xhr.addEventListener('load', function () {
+					log('Status: ' + xhr.status);
+					if (xhr.status >= 400) {
+						log('Request errored\n' + xhr.responseText);
+						return;
+					}
+					if (xhr.status === 200) {
+						try {
+							var data = JSON.parse(xhr.responseText);
+							log('Response Data:' + '\n\t' + JSON.stringify(data));
+						} catch(e) {
+							log(e.message);
+						}
+					}
+					done();
+				});
+				xhr.addEventListener('error', function (e) {
+					console.log(e);
+					log('Status: ' + xhr.status);
+					log('AN ERROR OCCURED!');
+					log('This probably means that the CORS failed...');
+				});
+				log(method + ' ' + url);
+				xhr.open(method, url);
+				xhr.send();
+			}
+		</script>
+	</body>
+</html>

@@ -10,7 +10,7 @@ module.exports = function router (proxyServer, opts = {}) {
 			}
 
 			res.setHeader('Access-Control-Allow-Origin', req.headers['origin']);
-			res.setHeader('Access-Control-Allow-Method', req.headers['access-control-request-method']);
+			res.setHeader('Access-Control-Allow-Methods', req.headers['access-control-request-method']);
 			res.statusCode = 200;
 			res.end();
 		});
@@ -20,7 +20,7 @@ module.exports = function router (proxyServer, opts = {}) {
 	proxyServer.on('proxyRes', function (proxyRes, req) {
 		// Set cors headers
 		proxyRes.headers['Access-Control-Allow-Origin'] = req.headers['origin'] || req.headers['host'];
-		proxyRes.headers['Access-Control-Allow-Method'] = req.method;
+		proxyRes.headers['Access-Control-Allow-Methods'] = req.method;
 		if (opts.corsHeaders) {
 			proxyRes.headers['Access-Control-Allow-Headers'] = opts.corsHeaders.join(', ');
 		}

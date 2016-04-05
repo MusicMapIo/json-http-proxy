@@ -34,7 +34,7 @@ describe('json-http-proxy:cors', function () {
 				}, function (res) {
 					assert.equal(res.statusCode, 200);
 					assert.equal(res.headers['access-control-allow-origin'], 'example.com');
-					assert.equal(res.headers['access-control-allow-method'], 'PUT');
+					assert.equal(res.headers['access-control-allow-methods'], 'PUT');
 					close();
 					done();
 				}).end();
@@ -70,7 +70,7 @@ describe('json-http-proxy:cors', function () {
 				}, function (res) {
 					assert.equal(res.statusCode, 200);
 					assert.equal(res.headers['access-control-allow-origin'], 'example.com');
-					assert.equal(res.headers['access-control-allow-method'], 'GET');
+					assert.equal(res.headers['access-control-allow-methods'], 'GET');
 					close();
 					done();
 				}).end();

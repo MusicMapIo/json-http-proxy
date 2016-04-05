@@ -124,6 +124,7 @@ export class ProxyServer extends EventEmitter {
 			return this.emit('error', e);
 		}
 
+		this.emit('pluginInatilized', plugin);
 		p(this, opts);
 	}
 
@@ -148,6 +149,9 @@ export class ProxyServer extends EventEmitter {
 
 		upstream.proxy = this[_proxy];
 		this[_upstreams][name] = new Upstream(name, upstream);
+
+		// Plugin hook
+		this.emit('registerUpstream', name, this[_upstreams][name]);
 
 		return this[_upstreams][name];
 	}
