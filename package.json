@@ -8,6 +8,7 @@
   },
   "scripts": {
     "babel": "babel src --out-dir lib",
+    "watch": "babel src --out-dir lib --watch",
     "prepublish": "npm run test",
     "test": "happiness && npm run babel && mocha"
   },
@@ -26,6 +27,7 @@
   "homepage": "https://github.com/MusicMapIo/json-http-proxy#readme",
   "dependencies": {
     "commander": "^2.9.0",
+    "cookie": "^0.2.3",
     "finalhandler": "^0.4.1",
     "http-proxy": "^1.12.0",
     "loggerr": "^1.7.0",

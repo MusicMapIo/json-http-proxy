@@ -16,16 +16,16 @@ The original goal of this project was to run in development when working with mi
 
 - CORS headers
 - Modifying request and response body data
-- User-agent detection (Ex. serving mobile website views)
-- Cookie modifications **Coming Soon**
-- Cacheing proxy **Coming Soon**
+- User-agent detection/modification (Ex. serving mobile website views)
+- Cookie modifications
+- Cacheing proxy
 
 All the functionality for doing this kind of processing is done through a simple plugin system.  Plugins are just a function which are passed the instance of `ProxyServer`.  They can use this instance to hook into events used to modify properties the requests, responses and other functionality.  Even core functionality is implemented as plugins, there are a few built in plugins for some common needs:
 
-- Router: Processes host, path and http method matching
 - Route upstream handler: Allows registering named upstreams and specifying them in the routes `upstream` field
 - CORS: Properly sets the `Access-Control-Allow-Methods` and `Access-Control-Allow-Origin` headers based on the incoming request, also responds to `OPTIONS` requests.
 - Cookie modifier: Specify rules for modifying cookie names and values
+- Request/Response data modifier: Specify rules for modifying cookie names and values
 
 ## Installation
 
@@ -39,7 +39,7 @@ $ npm install json-http-proxy
 $ json-http-proxy
 ```
 
-This will start with defaults and load the configuration file called `proxy-config.json`.  Here is an example of this file from our usage
+This will start with defaults and load the configuration file called `proxy-config.json`.  Here is an example of this file from our usage:
 
 ```
 {
@@ -92,8 +92,10 @@ This file is required in using node's `require` method, so anything that is vali
 - `changeOrigin`
 - `xfwd`
 - `headers`
-- `corsHeaders`
-- `routeUpstreams`
 - `plugins`
+- `plugins.corsHeaders`
+- `plugins.routeUpstreams`
+- `plugins.cors`
+- `plugins.cookie`
 - `upstreams`
 - `routes`

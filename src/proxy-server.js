@@ -57,19 +57,28 @@ export class ProxyServer extends EventEmitter {
 		//
 		// Setup plugins
 		//
+		var plugins = Object.assign({}, opts.plugins || {});
 
 		// Use the router upstreams plugin
-		if (opts.routeUpstreams !== false) {
+		if (plugins.routeUpstreams !== false) {
 			this.initPlugin('./plugins/route-upstream', opts);
+			delete plugins.routeUpstream;
 		}
 
 		// Use the cors plugin
-		if (opts.cors !== false) {
+		if (plugins.cors !== false) {
 			this.initPlugin('./plugins/cors', opts);
+			delete plugins.cors;
+		}
+
+		// Use the cookie plugin
+		if (plugins.cookie) {
+			this.initPlugin('./plugins/cookie', opts);
+			delete plugins.cookie;
 		}
 
 		// Load custom plugins
-		opts.plugins && this.initPlugin(opts.plugins, opts);
+		this.initPlugin(plugins, opts);
 
 		// Register upstreams
 		this[_upstreams] = {};
@@ -112,9 +121,9 @@ export class ProxyServer extends EventEmitter {
 	 */
 	initPlugin (plugin, opts) {
 		// Init multiple if an array
-		if (Array.isArray(plugin)) {
-			return plugin.forEach((p) => {
-				this.initPlugin(p, opts);
+		if (typeof plugin === 'object') {
+			return Object.keys(plugin).map((k) => {
+				return this.initPlugin(k, opts);
 			});
 		}
 
