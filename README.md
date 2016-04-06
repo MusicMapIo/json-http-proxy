@@ -2,7 +2,7 @@
 
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
-[![Build Status](https://travis-ci.org/MusicMap/json-http-proxy.svg?branch=master)](https://travis-ci.org/MusicMap/json-http-proxy)
+[![Build Status](https://travis-ci.org/MusicMapIo/json-http-proxy.svg?branch=master)](https://travis-ci.org/MusicMapIo/json-http-proxy)
 [![js-happiness-style](https://img.shields.io/badge/code%20style-happiness-brightgreen.svg)](https://github.com/JedWatson/happiness)
 
 [npm-image]: https://img.shields.io/npm/v/json-http-proxy.svg
