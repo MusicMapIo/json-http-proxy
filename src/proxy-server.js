@@ -27,12 +27,9 @@ export class ProxyServer extends EventEmitter {
 		this.router = new Router(opts.routerOptions);
 
 		// Create http server
-		this[_server] = http.createServer((req, res) => {
-			this.router(req, res, finalhandler(req, res, {
-				onerror: (err) => {
-					this.emit('error', err);
-				}
-			}));
+		this[_server] = opts.server || http.createServer();
+		this[_server].on('request', (req, res) => {
+			this.handle(req, res);
 		});
 		this[_server].on('error', (err) => {
 			this.emit('error', err);
@@ -207,6 +204,18 @@ export class ProxyServer extends EventEmitter {
 		});
 
 		return route;
+	}
+
+	/**
+	 * Handle a request
+	 *
+	 */
+	handle (req, res) {
+		this.router(req, res, finalhandler(req, res, {
+			onerror: (err) => {
+				this.emit('error', err);
+			}
+		}));
 	}
 
 	/**
