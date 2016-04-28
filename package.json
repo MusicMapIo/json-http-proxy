@@ -1,6 +1,6 @@
 {
   "name": "json-http-proxy",
-  "version": "1.0.0-ALPHA-4",
+  "version": "1.0.0-BETA-1",
   "description": "A json configuration based http proxy server",
   "main": "index.js",
   "bin": {
