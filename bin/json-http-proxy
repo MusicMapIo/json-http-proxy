@@ -2,6 +2,7 @@
 
 var app = require('commander');
 var path = require('path');
+var url = require('url');
 var cluster = require('cluster');
 var cpus = require('os').cpus().length;
 var ProxyServer = require('../');
@@ -27,9 +28,20 @@ var logger = new Loggerr({
 	formatter: require('loggerr/formatters/cli')
 });
 
+// Load configuration
+var config = require(path.resolve(app.cwd, app.config));
+
+// Setup default port
+var port = app.port || config.port || 8081;
+
 // Create the cluster
 if (cluster.isMaster && app.workers > 1) {
 	logger.info('Spawning ' + app.workers + ' worker processes');
+
+	// Track online workers and starting status
+	var online = 0;
+	var starting = true;
+
 	for (var i = 0; i < app.workers; i++) {
 		createWorker();
 	}
@@ -38,15 +50,20 @@ if (cluster.isMaster && app.workers > 1) {
 		var worker = cluster.fork();
 
 		// Do some stuff on events
-		if (logger.level > Loggerr.NOTICE) {
-			worker.on('online', function () {
-				logger.debug('Worker process online (' + Object.keys(cluster.workers).length + '/' + app.workers + ')');
-			});
-		}
+		worker.on('online', function () {
+			online++;
+			logger.debug('Worker process online (' + online + '/' + app.workers + ')');
+
+			if (starting && online === app.workers) {
+				starting = false;
+				logger.notice('Listening on ' + app.host + ':' + port);
+			}
+		});
 		worker.on('error', function (err) {
 			logger.error(err);
 		});
 		worker.on('exit', function (code, signal) {
+			online--;
 			logger[(code === 0) ? 'debug' : 'error']('Worker exited with code ' + code);
 
 			// Re-spawn
@@ -54,9 +71,6 @@ if (cluster.isMaster && app.workers > 1) {
 		});
 	}
 } else {
-	// Load configuration
-	var config = require(path.resolve(app.cwd, app.config));
-
 	// Create server
 	var server = new ProxyServer(config);
 
@@ -66,14 +80,14 @@ if (cluster.isMaster && app.workers > 1) {
 			logger.info('Plugin initalized: ' + plugin);
 		});
 		server.on('proxyReq', function (proxyReq, req, res, options) {
-			logger.info('Proxying request');
+			logger.info('Proxying request: ' + req.url + ' => ' + url.format(options.target));
 			logger.debug('Proxy request', proxyReq);
 			logger.debug('Request', req);
 			logger.debug('Response', res);
 			logger.debug('Options', options);
 		});
 		server.on('proxyRes', function (proxyRes, req, res) {
-			logger.info('Proxy response recieved');
+			logger.info('Proxy response recieved: ' + req.url);
 			logger.debug('Proxy request', proxyRes);
 			logger.debug('Request', req);
 			logger.debug('Response', res);
@@ -94,7 +108,7 @@ if (cluster.isMaster && app.workers > 1) {
 	});
 
 	// Start listening
-	server.listen(app.port || config.port || 8081, app.host, function (err) {
+	server.listen(port, app.host, function (err) {
 		if (err) {
 			logger.error(err);
 			process.exit();

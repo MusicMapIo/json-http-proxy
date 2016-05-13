@@ -11,7 +11,7 @@ export class Upstream {
 		this.name = name;
 		this.protocol = opts.protocol || 'http:';
 		this.hostname = opts.hostname || 'localhost';
-		this.port = typeof opts.port !== 'undefined' ? opts.port : 80;
+		this.port = typeof opts.port !== 'undefined' ? opts.port : opts.protocol === 'http:' ? 80 : 443;
 		this.path = opts.path || '/';
 		this[_proxy] = opts.proxy;
 	}

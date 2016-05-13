@@ -1,5 +1,6 @@
 // External deps use normal require
 var http = require('http');
+var https = require('https');
 var httpProxy = require('http-proxy');
 var EventEmitter = require('events');
 var Router = require('router');
@@ -27,7 +28,7 @@ export class ProxyServer extends EventEmitter {
 		this.router = new Router(opts.routerOptions);
 
 		// Create http server
-		this[_server] = opts.server || http.createServer();
+		this[_server] = opts.server || opts.ssl ? https.createServer(opts.ssl) : http.createServer();
 		this[_server].on('request', (req, res) => {
 			this.handle(req, res);
 		});
@@ -39,7 +40,9 @@ export class ProxyServer extends EventEmitter {
 		this[_proxy] = httpProxy.createProxyServer({
 			changeOrigin: typeof opts.changeOrigin === 'undefined' ? true : opts.changeOrigin,
 			xfwd: typeof opts.xfwd === 'undefined' ? true : opts.xfwd,
-			headers: opts.headers
+			headers: opts.headers,
+			ssl: opts.ssl,
+			secure: true
 		});
 		this[_proxy].on('error', (err) => {
 			this.emit('error', err);
