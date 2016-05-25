@@ -76,7 +76,7 @@ if (cluster.isMaster && app.workers > 1) {
 
 	// Bind to events for logging
 	if (logger.level > Loggerr.NOTICE) {
-		server.on('pluginInatilized', function (plugin) {
+		server.on('pluginInitialized', function (plugin) {
 			logger.info('Plugin initalized: ' + plugin);
 		});
 		server.on('proxyReq', function (proxyReq, req, res, options) {

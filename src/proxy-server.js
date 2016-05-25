@@ -133,7 +133,7 @@ export class ProxyServer extends EventEmitter {
 			return this.emit('error', e);
 		}
 
-		this.emit('pluginInatilized', plugin);
+		this.emit('pluginInitialized', plugin);
 		p(this, opts);
 	}
 
