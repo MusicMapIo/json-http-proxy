@@ -16,14 +16,32 @@ export class Upstream {
 		this[_proxy] = opts.proxy;
 	}
 
-	handle (req, res) {
-		this[_proxy].web(req, res, {
-			target: url.format({
-				protocol: this.protocol,
-				hostname: this.hostname,
-				port: this.port,
-				path: this.path
-			})
-		});
+	handle () {
+		var req = arguments[0];
+		// checks the number of arguments to see if this is a standard request or a websocket request
+		if (arguments.length === 3) {
+			var res = arguments[1];
+
+			this[_proxy].web(req, res, {
+				target: url.format({
+					protocol: this.protocol,
+					hostname: this.hostname,
+					port: this.port,
+					path: this.path
+				})
+			});
+		} else if (arguments.length === 4) {
+			var socket = arguments[1];
+			var head = arguments[3];
+
+			this[_proxy].ws(req, socket, head, {
+				target: url.format({
+					protocol: this.protocol,
+					hostname: this.hostname,
+					port: this.port,
+					path: this.path
+				})
+			});
+		}
 	}
 }

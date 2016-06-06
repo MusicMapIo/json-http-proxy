@@ -9,11 +9,13 @@ var finalhandler = require('finalhandler');
 // Internal deps use ES6 module syntax
 import {Upstream} from './upstream';
 import {Route} from './route';
+import {WsRoute} from './ws-route';
 
 // Private stuff
 const _proxy = Symbol('proxy');
 const _upstreams = Symbol('upstreams');
 const _routes = Symbol('routes');
+const _wsRoutes = Symbol('websocketRoutes');
 const _server = Symbol('server');
 
 export class ProxyServer extends EventEmitter {
@@ -27,6 +29,9 @@ export class ProxyServer extends EventEmitter {
 		// Create a router instance to hook middleware into
 		this.router = new Router(opts.routerOptions);
 
+		// Create a websocket object to hook middleware into
+		this.wsRouter = {};
+
 		// Create http server
 		this[_server] = opts.server || opts.ssl ? https.createServer(opts.ssl) : http.createServer();
 		this[_server].on('request', (req, res) => {
@@ -35,6 +40,10 @@ export class ProxyServer extends EventEmitter {
 		this[_server].on('error', (err) => {
 			this.emit('error', err);
 		});
+		// Adds support for Websockets
+		this[_server].on('upgrade', (req, socket, head) => {
+			this.handleWebsocket(req, socket, head);
+		});
 
 		// Create the proxy server
 		this[_proxy] = httpProxy.createProxyServer({
@@ -42,7 +51,8 @@ export class ProxyServer extends EventEmitter {
 			xfwd: typeof opts.xfwd === 'undefined' ? true : opts.xfwd,
 			headers: opts.headers,
 			ssl: opts.ssl,
-			secure: true
+			secure: true,
+			ws: true
 		});
 		this[_proxy].on('error', (err) => {
 			this.emit('error', err);
@@ -88,6 +98,10 @@ export class ProxyServer extends EventEmitter {
 		this[_routes] = [];
 		opts.routes && this.registerRoute(opts.routes);
 
+		// Register Websockets
+		this[_wsRoutes] = [];
+		opts.websockets && this.registerWebsocketRoute(opts.websockets);
+
 		// If onListen then start listening
 		if (typeof onListen === 'function') {
 			this.listen(onListen);
@@ -116,7 +130,7 @@ export class ProxyServer extends EventEmitter {
 	}
 
 	/**
-	 * Initalize plugins
+	 * Initialize plugins
 	 *
 	 */
 	initPlugin (plugin, opts) {
@@ -221,6 +235,56 @@ export class ProxyServer extends EventEmitter {
 		}));
 	}
 
+	handleWebsocket (req, socket, head) {
+		// setup basic req values
+		req.baseUrl = req.baseUrl || '';
+		req.originalUrl = req.originalUrl || req.url;
+
+		// check for a matched route
+		this[_wsRoutes].forEach((route) => {
+			// Is the method allowed
+			if (route.methods.indexOf(req.method)) {
+				// Does the route match
+				if (req.url.match(route.regEx) !== null) {
+					route.handleRequest(req, socket, head);
+				}
+			}
+		});
+	}
+
+	/**
+	 * Register the websocket routes with the proxy
+	 *
+	 */
+	registerWebsocketRoute (s) {
+		// Register multiple as an array
+		if (Array.isArray(s)) {
+			return s.map(this.registerWebsocketRoute.bind(this));
+		}
+
+		// Create route object
+		var route = new WsRoute(s);
+
+		// Plugin hook
+		this.emit('registerRoute', route);
+
+		// Request handler method
+		route.handleRequest = function handleRequest (req, socket, head, next) {
+			// Check for hostname match
+			if (req.headers && route.hostname && req.headers.host !== route.hostname) {
+				return next(req, socket, head);
+			}
+
+			// Matched a route, handle request
+			route.handle(req, socket, head, next);
+		};
+
+		// Add the route
+		this[_wsRoutes].push(route);
+
+		return route;
+	}
+
 	/**
 	 * Close the server
 	 *
@@ -233,3 +297,4 @@ export class ProxyServer extends EventEmitter {
 		});
 	}
 }
+

@@ -4,3 +4,4 @@
 module.exports = require('./lib/proxy-server').ProxyServer;
 module.exports.Route = require('./lib/route').Route;
 module.exports.Upstream = require('./lib/upstream').Upstream;
+module.exports.WsRoute = require('./lib/ws-route').WsRoute;
