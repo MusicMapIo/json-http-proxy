@@ -99,3 +99,4 @@ This file is required in using node's `require` method, so anything that is vali
 - `plugins.cookie`
 - `upstreams`
 - `routes`
+- `timeout`

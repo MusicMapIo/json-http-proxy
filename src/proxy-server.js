@@ -42,6 +42,7 @@ export class ProxyServer extends EventEmitter {
 			xfwd: typeof opts.xfwd === 'undefined' ? true : opts.xfwd,
 			headers: opts.headers,
 			ssl: opts.ssl,
+			proxyTimeout: typeof opts.timeout !== 'undefined' ? parseInt(opts.timeout, 10) : null,
 			secure: true
 		});
 		this[_proxy].on('error', (err) => {
