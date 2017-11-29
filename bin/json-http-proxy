@@ -1,122 +1,115 @@
-#!/usr/bin/env node
+#! /usr/bin/env node
+'use strict'
+const app = require('commander')
+const path = require('path')
+const url = require('url')
+const cluster = require('cluster')
+const cpus = require('os').cpus().length
+const Loggerr = require('loggerr')
+const ProxyServer = require('../')
 
-var app = require('commander');
-var path = require('path');
-var url = require('url');
-var cluster = require('cluster');
-var cpus = require('os').cpus().length;
-var ProxyServer = require('../');
-var Loggerr = require('loggerr');
+app.option('-c, --config [path]', 'The json file path', 'proxy-config')
+app.option('-p, --port [port]', 'Port to run the proxy server on')
+app.option('-h, --host [host]', 'Hostname to listen on', 'localhost')
+app.option('-d, --cwd [dir]', 'Set the current working directory', process.cwd())
+app.option('-w, --workers [num]', 'Number of worker processes to run', cpus - 1)
+app.option('-v, --verbose', 'Verbose logging')
+app.option('--debug', 'Debug logging')
+app.parse(process.argv)
 
-app.option('-c, --config [path]', 'The json file path', './proxy-config.json');
-app.option('-p, --port [port]', 'Port to run the proxy server on');
-app.option('-h, --host [host]', 'Hostname to listen on', 'localhost');
-app.option('-d, --cwd [dir]', 'Set the current working directory', process.cwd());
-app.option('-w, --workers [num]', 'Number of worker processes to run', cpus - 1);
-app.option('-v, --verbose', 'Verbose logging');
-app.option('--debug', 'Debug logging');
-app.parse(process.argv);
-
-var level = Loggerr.NOTICE;
+var level = Loggerr.NOTICE
 if (app.verbose) {
-	level = Loggerr.INFO;
+  level = Loggerr.INFO
 } else if (app.debug) {
-	level = Loggerr.DEBUG;
+  level = Loggerr.DEBUG
 }
 var logger = new Loggerr({
-	level: level,
-	formatter: require('loggerr/formatters/cli')
-});
+  level: level,
+  formatter: require('loggerr/formatters/cli')
+})
 
 // Load configuration
-var config = require(path.resolve(app.cwd, app.config));
+var config = require(path.resolve(app.cwd, app.config))
 
 // Setup default port
-var port = app.port || config.port || 8081;
+var port = app.port || config.port || 8081
+
+function createWorker () {
+  var worker = cluster.fork()
+
+  // Do some stuff on events
+  worker.on('online', function () {
+    online++
+    logger.debug('Worker process online (' + online + '/' + app.workers + ')')
+
+    if (starting && online === app.workers) {
+      starting = false
+      logger.notice('Listening on ' + app.host + ':' + port)
+    }
+  })
+  worker.on('error', function (err) {
+    logger.error(err)
+  })
+  worker.on('exit', function (code, signal) {
+    online--
+    logger[(code === 0) ? 'debug' : 'error']('Worker exited with code ' + code)
+
+    // Re-spawn
+    createWorker()
+  })
+}
 
 // Create the cluster
 if (cluster.isMaster && app.workers > 1) {
-	logger.info('Spawning ' + app.workers + ' worker processes');
+  logger.info('Spawning ' + app.workers + ' worker processes')
 
-	// Track online workers and starting status
-	var online = 0;
-	var starting = true;
+  // Track online workers and starting status
+  var online = 0
+  var starting = true
 
-	for (var i = 0; i < app.workers; i++) {
-		createWorker();
-	}
-
-	function createWorker () {
-		var worker = cluster.fork();
-
-		// Do some stuff on events
-		worker.on('online', function () {
-			online++;
-			logger.debug('Worker process online (' + online + '/' + app.workers + ')');
-
-			if (starting && online === app.workers) {
-				starting = false;
-				logger.notice('Listening on ' + app.host + ':' + port);
-			}
-		});
-		worker.on('error', function (err) {
-			logger.error(err);
-		});
-		worker.on('exit', function (code, signal) {
-			online--;
-			logger[(code === 0) ? 'debug' : 'error']('Worker exited with code ' + code);
-
-			// Re-spawn
-			createWorker();
-		});
-	}
+  for (var i = 0; i < app.workers; i++) {
+    createWorker()
+  }
 } else {
-	// Create server
-	var server = new ProxyServer(config);
+  // Create server
+  var server = new ProxyServer(config)
 
-	// Bind to events for logging
-	if (logger.level > Loggerr.NOTICE) {
-		server.on('pluginInitialized', function (plugin) {
-			logger.info('Plugin initalized: ' + plugin);
-		});
-		server.on('proxyReq', function (proxyReq, req, res, options) {
-			logger.info('Proxying request: ' + req.url + ' => ' + url.format(options.target));
-			logger.debug('Proxy request', proxyReq);
-			logger.debug('Request', req);
-			logger.debug('Response', res);
-			logger.debug('Options', options);
-		});
-		server.on('proxyRes', function (proxyRes, req, res) {
-			logger.info('Proxy response recieved: ' + req.url);
-			logger.debug('Proxy request', proxyRes);
-			logger.debug('Request', req);
-			logger.debug('Response', res);
-		});
-		server.on('registerUpstream', function (name, upstream) {
-			logger.info('Upstream registered', name);
-			logger.debug('Upstream', upstream);
-		});
-		server.on('registerRoute', function (plugin) {
-			logger.info('Route registered', route);
-		});
-	}
+  // Bind to events for logging
+  if (logger.level > Loggerr.NOTICE) {
+    server.on('proxyReq', function (proxyReq, req, res, options) {
+      logger.info('Proxying request: ' + req.url + ' => ' + url.format(options.target))
+      logger.debug('Proxy request', proxyReq)
+      logger.debug('Request', req)
+      logger.debug('Response', res)
+      logger.debug('Options', options)
+    })
+    server.on('proxyRes', function (proxyRes, req, res) {
+      logger.info('Proxy response recieved: ' + req.url)
+      logger.debug('Proxy request', proxyRes)
+      logger.debug('Request', req)
+      logger.debug('Response', res)
+    })
+    server.on('error', function (err) {
+      logger.error(err)
+    })
+  }
 
-	// Log on process uncaugh exceptions
-	process.on('uncaughtException', function (err) {
-		logger.emergency(err);
-		process.exit(1);
-	});
+  // Log on process uncaugh exceptions
+  process.on('uncaughtException', function (err) {
+    logger.emergency(err)
+    process.exit(1)
+  })
 
-	// Start listening
-	server.listen(port, app.host, function (err) {
-		if (err) {
-			logger.error(err);
-			process.exit();
-		}
-		if (process.send) {
-			process.send('online');
-		} else {
-			logger.notice('Listening on ' + server.hostname + ':' + server.port);
-		}
-	});
+  // Start listening
+  server.listen(port, app.host, function (err) {
+    if (err) {
+      logger.error(err)
+      process.exit()
+    }
+    if (process.send) {
+      process.send('online')
+    } else {
+      logger.notice('Listening on ' + server.hostname + ':' + server.port)
+    }
+  })
 }
