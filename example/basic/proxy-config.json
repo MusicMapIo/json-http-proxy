@@ -1,9 +1,0 @@
-{
-	"port": 8081,
-	"routes": [{
-		"path": "/*",
-		"upstream": {
-			"port": 8080
-		}
-	}]
-}

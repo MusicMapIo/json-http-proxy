@@ -31,9 +31,9 @@
 		<script type="text/javascript">
 			var _console = document.getElementById('console');
 
-			makeReq('GET', 'http://bar.localhost:8081/data.json', function () {
+			makeReq('GET', 'http://localhost:8081/data.json', function () {
 				log('GET request succeeded!\n');
-				makeReq('PUT', 'http://bar.localhost:8081', function () {
+				makeReq('PUT', 'http://localhost:8081', function () {
 					log('PUT request succeeded!\n');
 					log('All done!');
 				});
